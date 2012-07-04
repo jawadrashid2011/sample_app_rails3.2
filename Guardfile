@@ -1,4 +1,4 @@
-
+require 'active_support/core_ext'
 
 guard 'rspec', :version => 2, :all_after_pass => false, :cli => '--drb' do
   watch(%r{^spec/.+_spec\.rb$})
