@@ -1,7 +1,9 @@
 class UsersController < ApplicationController
-  before_filter :signed_in_user,  only: [:edit, :update, :index, :destroy]
-  before_filter :correct_user,    only: [:edit, :update]
-  before_filter :admin_user,      only: :destroy
+  before_filter :signed_in_user,            only: [:edit, :update, :index, :destroy]
+  before_filter :correct_user,              only: [:edit, :update]
+  before_filter :restrict_signed_in_users,  only: [:new, :create]
+  before_filter :admin_user,                only: :destroy
+  before_filter :dontDestroyOwnAdmin,       only: :destroy
 
   def show
   	@user = User.find(params[:id])
@@ -62,5 +64,16 @@ class UsersController < ApplicationController
 
     def admin_user
       redirect_to(root_path) unless current_user.admin?
+    end
+
+    def restrict_signed_in_users
+      if signed_in?
+        redirect_to root_path, notice: "Cannot access new or create"
+      end
+    end
+
+    def dontDestroyOwnAdmin
+      @user = User.find(params[:id])
+      redirect_to root_path , notice: "Cannot delete yourself" if current_user?(@user)
     end
 end

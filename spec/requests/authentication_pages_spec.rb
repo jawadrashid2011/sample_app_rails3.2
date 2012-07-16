@@ -26,6 +26,16 @@ describe "Authentication" do
       end
     end
 
+    describe "test for non-sgined in users" do
+      let(:user) { FactoryGirl.create(:user) }
+      before { visit root_path }
+      it { should_not have_title(user.name) }
+      it { should_not have_link('Users', href:users_path) }
+      it { should_not have_link('Profile', href: edit_user_path(user)) }
+      it { should_not have_link('Sign out', href: signout_path) }
+      it { should_not have_link('Sgin in', href: signin_path) }
+    end
+
     describe "with valid information" do
       let(:user) { FactoryGirl.create(:user) }
       before { sign_in user }
@@ -81,6 +91,19 @@ describe "Authentication" do
           it "should render the desired protected page" do 
             page.should have_title('Edit user')
           end
+
+          describe "when signing in again" do
+            before do
+              visit signin_path
+              fill_in "Email",    with: user.email
+              fill_in "Password", with: user.password
+              click_button "Sign in"
+            end
+
+            it "should render the default (profile) page" do
+              page.should have_selector('title', text: user.name)
+            end
+          end
         end
       end
 
@@ -113,5 +136,16 @@ describe "Authentication" do
         specify { response.should redirect_to(root_path) }
       end
     end
+
+    describe "don't allow admin to delete own self" do
+    let(:admin) { FactoryGirl.create(:admin) }
+
+    before do 
+      sign_in admin
+    end
+
+    before { delete user_path(admin) }
+    specify { response.should_not redirect_to(users_path) }
+  end
   end
 end
